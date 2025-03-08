@@ -15,97 +15,41 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Separator } from "@/components/ui/Separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
-import { Heart, MapPin, User, Bell, PlusCircle, Clock, CheckCircle, XCircle } from "lucide-react";
+import { MapPin, User, PlusCircle, Clock, XCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useSession } from "next-auth/react";
 import { HelpRequest } from "../entitites/help-request";
 import { useRouter } from "next/navigation";
-
-// Mock data for help requests
-const mockRequests = [
-    {
-        id: 1,
-        title: "Help with grocery shopping",
-        description: "I need assistance with weekly grocery shopping. I have a list ready and can reimburse for the groceries when delivered.",
-        location: "Home",
-        urgency: "normal",
-        timestamp: "2 days ago",
-        status: "accepted",
-        volunteer: "James K.",
-    },
-    {
-        id: 2,
-        title: "Ride to doctor's appointment",
-        description: "I have a doctor's appointment on Thursday at 2pm and need a ride there and back. The clinic is about 15 minutes away from my home.",
-        location: "Medical Center",
-        urgency: "high",
-        timestamp: "5 hours ago",
-        status: "pending",
-        volunteer: null,
-    },
-    {
-        id: 3,
-        title: "Help setting up new tablet",
-        description: "I received a new tablet as a gift but I'm having trouble setting it up. Could someone help me configure it and show me how to use basic functions?",
-        location: "Home",
-        urgency: "low",
-        timestamp: "1 week ago",
-        status: "completed",
-        volunteer: "Sarah M.",
-    }
-];
-
-// Status badge component
-const StatusBadge = ({ status }: { status: string }) => {
-    const variants: Record<string, string> = {
-        pending: "bg-yellow-100 text-yellow-800",
-        accepted: "bg-blue-100 text-blue-800",
-        completed: "bg-green-100 text-green-800",
-        cancelled: "bg-gray-100 text-gray-800",
-    };
-
-    const labels: Record<string, string> = {
-        pending: "Pending",
-        accepted: "Accepted",
-        completed: "Completed",
-        cancelled: "Cancelled",
-    };
-
-    return (
-        <Badge variant="outline" className={`${variants[status]} border-none`}>
-            {labels[status]}
-        </Badge>
-    );
-};
-
-// Urgency badge component
-const UrgencyBadge = ({ urgency }: { urgency: string }) => {
-    const variants: Record<string, string> = {
-        low: "bg-blue-100 text-blue-800",
-        normal: "bg-yellow-100 text-yellow-800",
-        high: "bg-red-100 text-red-800",
-    };
-
-    const labels: Record<string, string> = {
-        low: "Low",
-        normal: "Normal",
-        high: "Urgent",
-    };
-
-    return (
-        <Badge variant="outline" className={`${variants[urgency]} border-none`}>
-            {labels[urgency]}
-        </Badge>
-    );
-};
-
+import { useProfile } from "../context/ProfileContext";
+import StatusBadge from "@/components/ui/StatusBadge";
+import UrgencyBadge from "@/components/ui/UrgencyBadge";
+import Header from "@/components/ui/Header";
+import { getDistanceFromLatLonInKm, getPostedTimeAgo } from "@/lib/utils";
 
 const RequesterDashboard = () => {
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
-    const [cancelledRequests, setCancelledRequests] = useState<string[]>([]);
-    const { data: session, status } = useSession();
     const [requests, setRequests] = useState<HelpRequest[]>([]);
     const router = useRouter();
+    const { profile } = useProfile();
+    const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lon: position.coords.longitude,
+                    });
+                },
+                (error) => {
+                    console.error("Error getting location", error);
+                    setUserLocation(null);
+                }
+            );
+        } else {
+            setUserLocation(null);
+        }
+    }, [profile, router]);
 
     useEffect(() => {
         const fetchRequests = async (userId: string) => {
@@ -114,58 +58,58 @@ const RequesterDashboard = () => {
             setRequests(data);
         };
 
-        if (session?.user?.userId) {
-            fetchRequests(session.user.userId);
-        } else {
-            router.push('/signin');
+        if (profile) {
+            fetchRequests(profile.userId as string);
         }
-    }, [session, router]);
+    }, [profile, router]);
 
     // Toggle request details
     const toggleRequestDetails = (id: string) => {
         setExpandedRequest(expandedRequest === id ? null : id);
     };
 
-    const cancelRequest = (id: string) => {
-        if (!cancelledRequests.includes(id)) {
-            setCancelledRequests([...cancelledRequests, id]);
+    const cancelRequest = async (id: string) => {
+        const response = await fetch(`/api/requests/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id,
+                status: 'cancelled',
+            }),
+        });
 
+        if (response.status === 200) {
+            const updatedRequests = requests.map((request) => request._id === id ? { ...request, status: 'cancelled' } : request);
+            setRequests(updatedRequests);
             toast({
-                title: "Request cancelled",
-                description: "Your help request has been cancelled successfully.",
+                title: "Request cancelled!",
+                description: "The requester has been notified that you've cancelled the request.",
+            });
+        } else {
+            toast({
+                title: "Failed to cancel request",
+                description: "Please try again.",
             });
         }
     };
 
     const activeRequests = requests.filter(
-        req => req.status === "pending" || req.status === "accepted" || req.status === 'open'
+        req => req.status !== "completed" && req.status !== "cancelled"
     );
 
     const pastRequests = requests.filter(
-        req => req.status === "completed" || cancelledRequests.includes(req._id)
+        req => req.status === "completed" || req.status === "cancelled"
+    );
+
+    const cancelledRequests = requests.filter(
+        req => req.status === "cancelled"
     );
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            {/* Header */}
-            <header className="bg-white shadow-sm py-4 px-4">
-                <div className="max-w-5xl mx-auto w-full flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <Heart className="h-6 w-6 text-rose-500" />
-                        <h1 className="text-xl font-bold text-gray-800">HelpHood</h1>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon">
-                            <Bell className="h-5 w-5" />
-                        </Button>
-                        <Link href="/profile">
-                            <Button variant="ghost" size="icon">
-                                <User className="h-5 w-5" />
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             {/* Dashboard Content */}
             <div className="flex-1 p-4">
@@ -175,15 +119,14 @@ const RequesterDashboard = () => {
                         <div className="lg:col-span-1 space-y-6">
                             <Card>
                                 <CardHeader>
-                                    {/* TODO: use context for profile. */}
-                                    <CardTitle>Welcome Back, Margaret</CardTitle>
+                                    <CardTitle>Welcome Back, {profile?.name}</CardTitle>
                                     <CardDescription>
                                         Manage your help requests and track their status
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <Link href="/request-help">
-                                        <Button className="w-full gap-2">
+                                        <Button className="w-full gap-2 bg-gray-900 text-white hover:bg-gray-700 cursor-pointer">
                                             <PlusCircle className="h-4 w-4" />
                                             Create New Request
                                         </Button>
@@ -225,8 +168,8 @@ const RequesterDashboard = () => {
                                 <CardContent>
                                     <Tabs defaultValue="active" className="w-full">
                                         <TabsList className="mb-4">
-                                            <TabsTrigger value="active">Active Requests</TabsTrigger>
-                                            <TabsTrigger value="past">Past Requests</TabsTrigger>
+                                            <TabsTrigger value="active" className="cursor-pointer">Active Requests</TabsTrigger>
+                                            <TabsTrigger value="past" className="cursor-pointer">Past Requests</TabsTrigger>
                                         </TabsList>
 
                                         <TabsContent value="active" className="space-y-4">
@@ -240,7 +183,7 @@ const RequesterDashboard = () => {
                                                     </Link>
                                                 </div>
                                             ) : (
-                                                requests.map((request) => (
+                                                activeRequests.map((request) => (
                                                     <Card key={request._id} className="overflow-hidden">
                                                         <CardHeader className="p-4 pb-2 cursor-pointer" onClick={() => toggleRequestDetails(request._id)}>
                                                             <div className="flex justify-between items-start">
@@ -249,12 +192,17 @@ const RequesterDashboard = () => {
                                                                     <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
                                                                         <div className="flex items-center">
                                                                             <MapPin className="h-3.5 w-3.5 mr-1" />
-                                                                            { }
+                                                                            {userLocation ? `${getDistanceFromLatLonInKm(
+                                                                                request.location.coordinates[0],
+                                                                                request.location.coordinates[1],
+                                                                                userLocation?.lat,
+                                                                                userLocation?.lon
+                                                                            )} km away` : 'Unknown'}
                                                                         </div>
                                                                         <span>•</span>
                                                                         <div className="flex items-center">
                                                                             <Clock className="h-3.5 w-3.5 mr-1" />
-                                                                            {request.createdAt.toString()}
+                                                                            {getPostedTimeAgo(request.createdAt)}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -273,12 +221,12 @@ const RequesterDashboard = () => {
                                                                     {request.status === "accepted" && (
                                                                         <div className="flex items-center text-sm text-gray-500 mb-2">
                                                                             <User className="h-3.5 w-3.5 mr-1" />
-                                                                            <span>Accepted by: {request.author}</span>
+                                                                            <span>Accepted by: {request.acceptedBy}</span>
                                                                         </div>
                                                                     )}
                                                                 </CardContent>
                                                                 <CardFooter className="p-4 pt-0 flex justify-end">
-                                                                    {cancelledRequests.includes(request._id) ? (
+                                                                    {request.status === "cancelled" ? (
                                                                         <Button variant="outline" className="gap-2" disabled>
                                                                             <XCircle className="h-4 w-4" />
                                                                             Cancelled
@@ -318,13 +266,18 @@ const RequesterDashboard = () => {
                                                                     <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
                                                                         <div className="flex items-center">
                                                                             <MapPin className="h-3.5 w-3.5 mr-1" />
-                                                                            5 km away
+                                                                            {userLocation ? `${getDistanceFromLatLonInKm(
+                                                                                request.location.coordinates[0],
+                                                                                request.location.coordinates[1],
+                                                                                userLocation?.lat,
+                                                                                userLocation?.lon
+                                                                            )} km away` : "Unknown"}
                                                                             {/* {request.location} */}
                                                                         </div>
                                                                         <span>•</span>
                                                                         <div className="flex items-center">
                                                                             <Clock className="h-3.5 w-3.5 mr-1" />
-                                                                            {request.createdAt.toString()}
+                                                                            {getPostedTimeAgo(request.createdAt)}
                                                                         </div>
                                                                     </div>
                                                                 </div>
