@@ -10,4 +10,5 @@ export interface HelpRequest {
     };
     urgency: string;
     author: string;
+    acceptedBy?: string;
 }

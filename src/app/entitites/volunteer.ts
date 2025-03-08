@@ -1,3 +1,5 @@
+import { HelpRequest } from "./help-request";
+
 export interface Volunteer {
     userId: string;
     availability: boolean;
@@ -6,4 +8,5 @@ export interface Volunteer {
         coordinates: number[];
     };
     createdAt: Date;
+    requests: HelpRequest[];
 }

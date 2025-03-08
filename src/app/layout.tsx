@@ -7,6 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/Sonner";
 import './globals.css';
 
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+import { ProfileProvider } from "./context/ProfileContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,13 +32,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-      <ClientQueryProvider>
+        <ClientQueryProvider>
           <Toaster />
           <Sonner />
           <SessionProviderWrapper>
-          {children}
+            <ProfileProvider>
+              {children}
+            </ProfileProvider>
           </SessionProviderWrapper>
-          </ClientQueryProvider>
+        </ClientQueryProvider>
       </body>
     </html>
   );
