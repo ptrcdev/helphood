@@ -17,11 +17,13 @@ import { Separator } from "@/components/ui/Separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Heart, User, ArrowLeft, LogOut } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
+import { redirect, useRouter } from "next/navigation";
+import { useProfile } from "../context/ProfileContext";
 
 const UserProfile = () => {
-    const { data: session, status } = useSession();
+    const { profile } = useProfile();
+
     const router = useRouter();
     const [userData, setUserData] = useState({
         name: "",
@@ -40,7 +42,7 @@ const UserProfile = () => {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await fetch(`/api/users/${session?.user?.userId}`,);
+                const response = await fetch(`/api/users/${profile?.userId}`,);
                 const user = await response.json();
 
                 if (user) {
@@ -67,12 +69,9 @@ const UserProfile = () => {
             }
         }
 
-        if (status === "unauthenticated") {
-            router.push("/signin");
-        } else {
-            fetchUserData();
-        }
-    }, [router, status]);
+        if (profile) fetchUserData();
+        // else redirect('/signin');
+    }, [router, profile]);
 
 
 
@@ -123,8 +122,6 @@ const UserProfile = () => {
         });
     };
 
-    console.log(session);
-
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header */}
@@ -163,7 +160,7 @@ const UserProfile = () => {
                             </div>
                         </div>
                         <div className="space-x-2">
-                            {session?.user?.role === "requester" && (
+                            {profile?.role === "requester" && (
                                 <Link href="/requester-dashboard">
                                     <Button variant="outline" className="gap-2 bg-gray-800 text-rose-300 cursor-pointer hover:bg-gray-700">
                                         <Heart className="h-4 w-4" />

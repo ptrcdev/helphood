@@ -32,6 +32,7 @@ const RequesterDashboard = () => {
     const { profile } = useProfile();
     const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
+    
     useEffect(() => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
