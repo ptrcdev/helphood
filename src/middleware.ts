@@ -6,7 +6,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   
   // List of protected routes
-  const protectedRoutes = ['/requester-dashboard', '/profile'];
+  const protectedRoutes = ['/requester-dashboard', '/profile', '/request-help'];
   const protectedRoutesIfLoggedIn = ['/signin', '/signup'];
   // Check if the route is protected
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
@@ -35,5 +35,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/requester-dashboard/:path*', '/profile/:path*', '/signin', '/signup'],
+  matcher: ['/requester-dashboard/:path*','/request-help/:path*','/profile/:path*','/signin', '/signup'],
 };

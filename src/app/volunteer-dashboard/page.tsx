@@ -22,6 +22,8 @@ import { HelpRequest } from "../entitites/help-request";
 import { getDistanceFromLatLonInKm } from "@/lib/utils";
 import { Volunteer } from "../entitites/volunteer";
 import Header from "@/components/ui/Header";
+import { useProfile } from "../context/ProfileContext";
+import LoadingWheel from "@/components/LoadingWheel";
 
 const UrgencyBadge = ({ urgency }: { urgency: string }) => {
     const variants: Record<string, string> = {
@@ -46,12 +48,13 @@ const UrgencyBadge = ({ urgency }: { urgency: string }) => {
 const VolunteerDashboard = () => {
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
     const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
-    const { data: session, status } = useSession();
     const [requests, setRequests] = useState<HelpRequest[]>([]);
     const [volunteer, setVolunteer] = useState<Volunteer | null>(null);
     // Store user's location in state
     const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
     const router = useRouter();
+    const { profile } = useProfile();
+    const { data: _, status } = useSession();
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -70,7 +73,7 @@ const VolunteerDashboard = () => {
         } else {
             setUserLocation(null);
         }
-    }, [session, router]);
+    }, [profile]);
 
     useEffect(() => {
         const fetchRequests = async () => {
@@ -82,10 +85,12 @@ const VolunteerDashboard = () => {
 
         const fetchVolunteer = async () => {
             // check if it's logged in
-            if (!session?.user?.userId && session?.user?.role !== "volunteer") return;
+            if (!profile?.userId || profile?.role !== "volunteer") {
+                return;
+            }
             try {
                 // console.log(session.user);
-                const res = await fetch(`/api/volunteers/${session.user.userId}`, {
+                const res = await fetch(`/api/volunteers/${profile.userId}`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -99,19 +104,17 @@ const VolunteerDashboard = () => {
             }
         }
 
-        if (session?.user?.role !== "volunteer") {
-            router.push("/request-help");
-        } else {
-            fetchVolunteer();
-            fetchRequests();
-        }
-    }, [session, router]);
+
+        fetchVolunteer();
+        fetchRequests();
+
+    }, [profile, router]);
 
     const toggleAvailability = async () => {
         // check if it's logged in
-        if (!session?.user?.userId) return;
+        if (!profile?.userId || profile?.role !== "volunteer") return;
         else {
-            const response = await fetch(`/api/volunteers/${session.user.userId}`, {
+            const response = await fetch(`/api/volunteers/${profile.userId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -156,7 +159,7 @@ const VolunteerDashboard = () => {
             body: JSON.stringify({
                 id,
                 status: 'accepted',
-                userId: session?.user?.userId,
+                userId: profile?.userId,
             }),
         });
 
@@ -181,10 +184,10 @@ const VolunteerDashboard = () => {
     const uniqueUserIds = new Set(requests
         .filter((request) => request.status === "completed")
         .map((request) => request.author)); // Assuming 'author' holds the userId of the person who helped
-    
+
     const peopleHelped = uniqueUserIds.size; // Count of unique user IDs
 
-    return (
+    return status === 'authenticated' && profile ? (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
@@ -253,8 +256,8 @@ const VolunteerDashboard = () => {
                                                 const dist = getDistanceFromLatLonInKm(
                                                     userLocation.lat,
                                                     userLocation.lon,
-                                                    request.location.coordinates[1],
-                                                    request.location.coordinates[0]
+                                                    request.location.coordinates[0],
+                                                    request.location.coordinates[1]
                                                 );
                                                 distanceDisplay = `${dist.toFixed(1)} km away`;
                                             }
@@ -330,8 +333,8 @@ const VolunteerDashboard = () => {
                                             const dist = getDistanceFromLatLonInKm(
                                                 userLocation.lat,
                                                 userLocation.lon,
-                                                request.location.coordinates[1],
-                                                request.location.coordinates[0]
+                                                request.location.coordinates[0],
+                                                request.location.coordinates[1]
                                             );
                                             distanceDisplay = `${dist.toFixed(1)} km away`;
                                         }
@@ -391,7 +394,7 @@ const VolunteerDashboard = () => {
                 </div>
             </div>
         </div>
-    );
+    ) : <LoadingWheel />;
 };
 
 export default VolunteerDashboard;

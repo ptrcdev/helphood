@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { Heart, ArrowRight, LogOut, User } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import Footer from '@/components/ui/Footer';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
 import { useProfile } from './context/ProfileContext';
 import LoadingWheel from '@/components/LoadingWheel';
 
 const Home = () => {
   const { profile } = useProfile();
-
-  return !profile ? (
+  const { data: _, status} = useSession();
+  
+  return status === 'authenticated' && !profile ? (
     <LoadingWheel size='lg' />
   ) : (
     <div className="min-h-screen bg-gray-50">
@@ -61,7 +62,7 @@ const Home = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {
-              !profile && (
+              status === 'unauthenticated' && (
                 <>
 
                   <Link href="/request-help">

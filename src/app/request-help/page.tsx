@@ -16,8 +16,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Heart, ArrowLeft, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useProfile } from "../context/ProfileContext";
 
 const RequestHelp = () => {
@@ -25,8 +23,54 @@ const RequestHelp = () => {
     title: "",
     description: "",
     urgency: "normal",
-    location: "Auto-detected location", // Simulated for demo
+    location: {
+      type: 'Point', 
+      coordinates: []
+    } as {
+      type: 'Point', 
+      coordinates: number[]
+    }, 
   });
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      if (navigator.geolocation) {
+        console.log(navigator.geolocation);
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setFormData({
+              ...formData,
+              location: {
+                type: 'Point', 
+                coordinates: [position.coords.latitude, position.coords.longitude]
+              },
+            });
+          },
+          (error) => {
+            console.error("Error getting location", error);
+            setFormData({
+              ...formData,
+              location: {
+                type: 'Point', 
+                coordinates: []
+              },
+            });
+          }
+        );
+      } else {
+        setFormData({
+          ...formData,
+          location: {
+            type: 'Point', 
+            coordinates: []
+          },
+        });
+      }
+    };
+
+    fetchLocation();
+  }, [formData]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -225,7 +269,7 @@ const RequestHelp = () => {
                       <Input
                         id="location"
                         name="location"
-                        value={formData.location}
+                        value={formData.location.coordinates.length > 0 ? `${formData.location.coordinates[0].toPrecision(2)} ${formData.location.coordinates[0] > 0 ? 'N' : 'S'} , ${formData.location.coordinates[1].toPrecision(2)} ${formData.location.coordinates[1] > 0 ? 'E' : 'W'}` : "Auto-detected location"}
                         onChange={handleChange}
                         className="flex-1"
                         disabled
