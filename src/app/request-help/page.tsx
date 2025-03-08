@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -16,6 +16,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Heart, ArrowLeft, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const RequestHelp = () => {
   const [formData, setFormData] = useState({
@@ -28,6 +30,19 @@ const RequestHelp = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push('/signin');
+    } else {
+        if (session?.user?.role === "volunteer") {
+            router.push("/volunteer-dashboard");
+        }
+    }
+  }, [status, router]);
+  
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -71,12 +86,31 @@ const RequestHelp = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsSubmitting(true);
       
+      const response = await fetch("/api/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({...formData, userId: session?.user?.userId}),
+      });
+
+      if (response.status !== 201) {
+        toast(
+          {
+            title: "Error submitting request",
+            description: "Please try again",
+          }
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       // Simulate API call
       setTimeout(() => {
         console.log("Help request submitted:", formData);

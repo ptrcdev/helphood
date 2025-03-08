@@ -11,6 +11,7 @@ interface AuthToken extends JWT {
   name?: string | null;
   image?: string | null;
   userId?: string | null;
+  role?: string | null;
 }
 
 // Define the interface for the user
@@ -20,6 +21,7 @@ interface AuthUser {
   name?: string | null;
   image?: string | null;
   userId?: string | null;
+  role?: string | null;
 }
 
 export const authOptions: AuthOptions = {
@@ -52,7 +54,8 @@ export const authOptions: AuthOptions = {
           email: user.email,    
           name: user.name,
           image: user.image,
-          userId: user.userId
+          userId: user.userId,
+          role: user.role
         };
       }
     })
@@ -68,6 +71,7 @@ export const authOptions: AuthOptions = {
         token.name = user.name;
         token.image = user.image;
         token.userId = user.userId;
+        token.role = user.role;
       }
       return token;
     },
@@ -75,7 +79,8 @@ export const authOptions: AuthOptions = {
       if (token) {
         session.user = {
           id: token.id,
-          userId: token.userId
+          userId: token.userId,
+          role: token.role
         };
       }
       return session;

@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "../../../lib/mongodb";
 
-
-// GET: Fetch all help requests
-export async function GET() {
-  try {
-    const client = await clientPromise;
-    const db = client.db("hoodhelp");
-    const requests = await db.collection("requests").find({}).toArray();
-    return NextResponse.json({ requests });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch help requests." }, { status: 500 });
-  }
-}
-
 // POST: Create a new help request
 export async function POST(req: NextRequest) {
   try {
-    const { title, description, location: { lat, lng }, urgency } = await req.json();
+    const { title, description, location: { lat, lng }, urgency, userId } = await req.json();
     const newRequest = {
       title,
       description,
@@ -27,7 +14,8 @@ export async function POST(req: NextRequest) {
         type: "Point",
         coordinates: [lat, lng]
       },
-      urgency
+      urgency,
+      author: userId
     };
 
     const client = await clientPromise;
@@ -41,3 +29,21 @@ export async function POST(req: NextRequest) {
 }
 
 
+export async function GET(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const userId = searchParams.get("userId"); // Get userId from query parameters
+        const client = await clientPromise;
+        const db = client.db("hoodhelp");
+        
+        if (userId) {
+            const requests = await db.collection("requests").find({ author: userId }).toArray(); // Fetch requests for the userId
+            return NextResponse.json(requests, { status: 200 });
+        } else {
+            const requests = await db.collection("requests").find({}).toArray();
+            return NextResponse.json({ requests });
+        }
+    } catch (error) {
+        return NextResponse.json({ error: "Failed to retrieve requests." }, { status: 500 });
+    }
+}

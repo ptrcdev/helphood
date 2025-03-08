@@ -43,7 +43,7 @@ const UserProfile = () => {
                 const response = await fetch(`/api/users/${session?.user?.userId}`,);
                 const user = await response.json();
 
-                if (user) { 
+                if (user) {
                     setUserData({
                         name: user.user.name,
                         email: user.user.email,
@@ -75,7 +75,7 @@ const UserProfile = () => {
     }, [router, status]);
 
 
-    
+
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -162,10 +162,20 @@ const UserProfile = () => {
                                 <p className="text-gray-600">{userData.email}</p>
                             </div>
                         </div>
-                        <Button variant="outline" className="gap-2 hover:bg-rose-500 hover:text-white cursor-pointer" onClick={handleSignOut}>
-                            <LogOut className="h-4 w-4" />
-                            Sign Out
-                        </Button>
+                        <div className="space-x-2">
+                            {session?.user?.role === "requester" && (
+                                <Link href="/requester-dashboard">
+                                    <Button variant="outline" className="gap-2 bg-gray-800 text-rose-300 cursor-pointer hover:bg-gray-700">
+                                        <Heart className="h-4 w-4" />
+                                        Check Your Requests
+                                    </Button>
+                                </Link>
+                            )}
+                            <Button variant="outline" className="gap-2 hover:bg-rose-500 hover:text-white cursor-pointer" onClick={handleSignOut}>
+                                <LogOut className="h-4 w-4" />
+                                Sign Out
+                            </Button>
+                        </div>
                     </div>
 
                     <Tabs defaultValue="profile">

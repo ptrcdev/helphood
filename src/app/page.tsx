@@ -32,9 +32,9 @@ const Home = () => {
               </Link></>) : (
               <div className='flex items-center gap-4'>
                 <Link href="/profile">
-                <Button variant="ghost" size="icon" className='[&_svg]:size-5 hover:bg-gray-100 cursor-pointer'>
-                <User className="h-8 w-8" />
-                </Button>
+                  <Button variant="ghost" size="icon" className='[&_svg]:size-5 hover:bg-gray-100 cursor-pointer'>
+                    <User className="h-8 w-8" />
+                  </Button>
                 </Link>
                 <button onClick={() => signOut()}>
                   <LogOut className='h-5 w-5 cursor-pointer text-rose-500 hover:text-rose-800' />
@@ -56,16 +56,42 @@ const Home = () => {
             who want to make a difference in their community.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/request-help">
-              <button className="w-full sm:w-auto flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800 cursor-pointer">
-                Request Help <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-            <Link href="/volunteer-dashboard">
-              <button className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 cursor-pointer outline outline-1 outline-gray-300">
-                Volunteer Dashboard <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
+            {
+              status === 'unauthenticated' && (
+                <>
+
+                  <Link href="/request-help">
+                    <button className="w-full sm:w-auto flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                      Request Help <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </Link>
+                  <Link href="/request-help">
+                    <button className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 cursor-pointer outline outline-1 outline-gray-300">
+                      Start Helping <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </Link>
+                </>
+
+              )
+            }
+            {
+              status === 'authenticated' && session.user?.role === 'volunteer' && (
+                <Link href="/volunteer-dashboard">
+                  <button className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 cursor-pointer outline outline-1 outline-gray-300">
+                    Volunteer Dashboard <ArrowRight className="h-4 w-4" />
+                  </button>
+                </Link>
+              )
+            }
+            {
+              status === 'authenticated' && session.user?.role === 'requester' && (
+                <Link href="/requester-dashboard">
+                  <button className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 cursor-pointer outline outline-1 outline-gray-300">
+                    Requester Dashboard <ArrowRight className="h-4 w-4" />
+                  </button>
+                </Link>
+              )
+            }
           </div>
         </div>
       </section>
