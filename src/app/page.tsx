@@ -4,15 +4,20 @@ import Link from 'next/link';
 import { Heart, ArrowRight, LogOut, User } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/Card';
 import Footer from '@/components/ui/Footer';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
+import { useProfile } from './context/ProfileContext';
+import LoadingWheel from '@/components/LoadingWheel';
 
 const Home = () => {
-  const { data: session, status } = useSession();
+  const { profile } = useProfile();
 
-  return (
+  return !profile ? (
+    <LoadingWheel size='lg' />
+  ) : (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+
+
       <header className="bg-white shadow-sm py-4 px-4 md:px-6">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -20,7 +25,7 @@ const Home = () => {
             <h1 className="text-2xl font-bold text-gray-800">HelpHood</h1>
           </div>
           <div className="space-x-2">
-            {status === 'unauthenticated' ? (<><Link href="/signin">
+            {!profile ? (<><Link href="/signin">
               <button className="bg-white border font-bold border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-100">
                 Sign In
               </button>
@@ -45,7 +50,6 @@ const Home = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="py-12 px-4 md:py-20">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -57,7 +61,7 @@ const Home = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {
-              status === 'unauthenticated' && (
+              !profile && (
                 <>
 
                   <Link href="/request-help">
@@ -75,7 +79,7 @@ const Home = () => {
               )
             }
             {
-              status === 'authenticated' && session.user?.role === 'volunteer' && (
+              profile?.role === 'volunteer' && (
                 <Link href="/volunteer-dashboard">
                   <button className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 cursor-pointer outline outline-1 outline-gray-300">
                     Volunteer Dashboard <ArrowRight className="h-4 w-4" />
@@ -84,7 +88,7 @@ const Home = () => {
               )
             }
             {
-              status === 'authenticated' && session.user?.role === 'requester' && (
+              profile?.role === 'requester' && (
                 <Link href="/requester-dashboard">
                   <button className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-300 cursor-pointer outline outline-1 outline-gray-300">
                     Requester Dashboard <ArrowRight className="h-4 w-4" />
@@ -157,8 +161,9 @@ const Home = () => {
       </section>
 
       <Footer />
+
     </div>
-  );
-}
+  )
+};
 
 export default Home;

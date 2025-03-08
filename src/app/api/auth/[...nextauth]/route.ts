@@ -35,20 +35,20 @@ export const authOptions: AuthOptions = {
       async authorize(credentials) {
         const client = await clientPromise;
         const db = client.db("hoodhelp");
-
+      
         const user = await db.collection("users").findOne({
           email: credentials?.email,
         });
-
+      
         if (!user) {
           throw new Error("No user found with the provided email");
         }
-
+      
         const isValid = await compare(credentials!.password, user.password);
         if (!isValid) {
           throw new Error("Incorrect password");
         }
-
+    
         return { 
           id: user._id.toString(), 
           email: user.email,    
@@ -84,8 +84,20 @@ export const authOptions: AuthOptions = {
         };
       }
       return session;
-    }
-  }
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production', // Ensure cookies are secure in production
+      },
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

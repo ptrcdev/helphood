@@ -18,6 +18,7 @@ import { Heart, ArrowLeft, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useProfile } from "../context/ProfileContext";
 
 const RequestHelp = () => {
   const [formData, setFormData] = useState({
@@ -30,18 +31,7 @@ const RequestHelp = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push('/signin');
-    } else {
-        if (session?.user?.role === "volunteer") {
-            router.push("/volunteer-dashboard");
-        }
-    }
-  }, [status, router]);
+  const { profile } = useProfile();
   
 
   const handleChange = (
@@ -97,7 +87,7 @@ const RequestHelp = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({...formData, userId: session?.user?.userId}),
+        body: JSON.stringify({...formData, userId: profile?.userId}),
       });
 
       if (response.status !== 201) {
