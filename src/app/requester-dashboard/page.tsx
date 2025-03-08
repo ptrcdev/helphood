@@ -69,6 +69,7 @@ const RequesterDashboard = () => {
         setExpandedRequest(expandedRequest === id ? null : id);
     };
 
+    console.log(requests.map(request => request.location.coordinates));
     const cancelRequest = async (id: string) => {
         const response = await fetch(`/api/requests/${id}`, {
             method: 'PUT',
@@ -194,10 +195,10 @@ const RequesterDashboard = () => {
                                                                         <div className="flex items-center">
                                                                             <MapPin className="h-3.5 w-3.5 mr-1" />
                                                                             {userLocation ? `${getDistanceFromLatLonInKm(
-                                                                                request.location.coordinates[0],
-                                                                                request.location.coordinates[1],
                                                                                 userLocation?.lat,
-                                                                                userLocation?.lon
+                                                                                userLocation?.lon,
+                                                                                request.location.coordinates[0],
+                                                                                request.location.coordinates[1]
                                                                             )} km away` : 'Unknown'}
                                                                         </div>
                                                                         <span>•</span>

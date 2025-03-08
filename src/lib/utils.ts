@@ -21,7 +21,8 @@ export function getDistanceFromLatLonInKm(
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in km
+  const distInKm = R * c;
+  return parseFloat(distInKm.toFixed(2));
 }
 
 function deg2rad(deg: number) {
