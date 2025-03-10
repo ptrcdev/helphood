@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { signOut } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import { useProfile } from "../context/ProfileContext";
+import ImageUploader from "@/components/ImageUploader";
 
 const UserProfile = () => {
     const { profile } = useProfile();
@@ -38,6 +39,8 @@ const UserProfile = () => {
         },
         image: "",
     });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -70,7 +73,7 @@ const UserProfile = () => {
         }
 
         if (profile) fetchUserData();
-        // else redirect('/signin');
+
     }, [router, profile]);
 
 
@@ -122,6 +125,11 @@ const UserProfile = () => {
         });
     };
 
+    const handleImageChange = (file: File | null, previewUrl: string | null) => {
+        setSelectedFile(file);
+        setPreviewUrl(previewUrl); // create preview url for image
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header */}
@@ -143,15 +151,21 @@ const UserProfile = () => {
                 <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-4">
-                            {userData.image ? (
-                                <img
-                                    src={userData.image ?? ""}
-                                    alt="Profile"
-                                    className="h-12 w-12 rounded-full"
-                                />
+                            {userData.image || previewUrl ? (
+                                <>
+                                    <ImageUploader onChange={handleImageChange}>
+                                    <img
+                                        src={previewUrl ? previewUrl : userData.image}
+                                        alt="Profile"
+                                        className="h-12 w-12 rounded-full"
+                                    />
+                                    </ImageUploader>
+                                </>
                             ) : (
                                 <div className="bg-blue-100 text-blue-600 p-3 rounded-full">
+                                    <ImageUploader onChange={handleImageChange}>
                                     <User className="h-8 w-8" />
+                                    </ImageUploader>
                                 </div>
                             )}
                             <div>

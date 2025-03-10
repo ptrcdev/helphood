@@ -3,52 +3,44 @@
 import { useState } from "react";
 
 type ImageUploaderProps = {
-  onUpload: (url: string) => void;
+  onChange: (file: File | null, previewUrl: string | null) => void;
+  children?: React.ReactNode;
 };
 
-export default function ImageUploader({ onUpload }: ImageUploaderProps) {
-  const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+export default function ImageUploader({ onChange, children }: ImageUploaderProps) {
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
-
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: "POST", body: formData }
-      );
-      const data = await res.json();
-      if (data.secure_url) {
-        setPreviewUrl(data.secure_url);
-        onUpload(data.secure_url);
-      } else {
-        console.error("Upload error", data);
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    } finally {
-      setUploading(false);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onChange(file, reader.result as string);
+        // Reset the input value so selecting the same file later triggers onChange again
+        e.target.value = "";
+      };
+      reader.readAsDataURL(file);
+    } else {
+      onChange(null, null);
     }
   };
 
   return (
     <div>
-      <input type="file" accept="image/*" onChange={handleImageChange} />
-      {uploading && <p>Uploading...</p>}
-      {previewUrl && (
-        <img
-          src={previewUrl}
-          alt="Uploaded Preview"
-          className="h-16 w-16 rounded-full object-cover"
-        />
-      )}
+      {/* Custom label to trigger file selection */}
+      <label
+        htmlFor="image-upload"
+        className="cursor-pointer"
+      >
+        {children ? children : "Upload image"}
+      </label>
+      {/* Hidden file input */}
+      <input
+        id="image-upload"
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "@/firebaseConfig";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -46,4 +48,28 @@ export function getPostedTimeAgo(time: Date) {
   } else {
     return `${seconds} second${seconds > 1 ? "s" : ""} ago`;
   }
+}
+
+export async function uploadFile(file: File): Promise<string> {
+  // Create a unique reference for this file
+  const storageRef = ref(storage, `profile-images/${Date.now()}-${file.name}`);
+  
+  // Start the file upload
+  const uploadTask = uploadBytesResumable(storageRef, file);
+  
+  // Return a promise that resolves with the download URL when the upload completes
+  return new Promise((resolve, reject) => {
+    uploadTask.on(
+      "state_changed",
+      () => {},
+      (error) => {
+        console.error("Error uploading file:", error);
+        reject(error);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        resolve(downloadURL);
+      }
+    );
+  });
 }
