@@ -24,7 +24,7 @@ interface AuthUser {
   role?: string | null;
 }
 
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
