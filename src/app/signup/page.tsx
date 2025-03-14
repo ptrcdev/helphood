@@ -13,6 +13,8 @@ import { Heart, ArrowLeft, Upload } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import ImageUploader from "@/components/ImageUploader";
+import { uploadFile } from "@/lib/utils";
 
 const SignUp = () => {
     const [formData, setFormData] = useState({
@@ -32,7 +34,8 @@ const SignUp = () => {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [step, setStep] = useState(1); // Track the current step of the form
-
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const router = useRouter();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -127,9 +130,18 @@ const SignUp = () => {
 
         if (step === 3) {
             try {
+                let imageUrl = formData.image;
+                // If a file was selected, upload it now
+                if (selectedFile) {
+                    imageUrl = await uploadFile(selectedFile); // This returns the Firebase download URL
+                    // Update formData with the actual download URL
+                    setFormData((prev) => ({ ...prev, image: imageUrl }));
+                }
+
+
                 const response = await fetch("/api/auth/signup", {
                     method: "POST",
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify({ ...formData, image: imageUrl }),
                     headers: {
                         "Content-Type": "application/json"
                     }
@@ -160,19 +172,9 @@ const SignUp = () => {
         }
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Convert to base64 for demo purposes
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setFormData({
-                    ...formData,
-                    image: reader.result as string,
-                });
-            };
-            reader.readAsDataURL(file);
-        }
+    const handleImageChange = (file: File | null, previewUrl: string | null) => {
+        setSelectedFile(file);
+        setPreviewUrl(previewUrl); // create preview url for image
     };
 
     return (
@@ -358,10 +360,10 @@ const SignUp = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="image">Profile Image (Optional)</Label>
                                         <div className="flex items-center gap-2">
-                                            {formData.image && (
+                                            {previewUrl && (
                                                 <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden">
                                                     <img
-                                                        src={formData.image}
+                                                        src={previewUrl}
                                                         alt="Profile preview"
                                                         className="h-full w-full object-cover"
                                                     />
@@ -372,16 +374,8 @@ const SignUp = () => {
                                                 className="cursor-pointer flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
                                             >
                                                 <Upload className="h-4 w-4" />
-                                                {formData.image ? "Change image" : "Upload image"}
+                                                <ImageUploader onChange={handleImageChange} />
                                             </label>
-                                            <input
-                                                id="image-upload"
-                                                name="image"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleImageChange}
-                                                className="hidden"
-                                            />
                                         </div>
                                     </div>
 
