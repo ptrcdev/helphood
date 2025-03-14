@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, StorageError } from "firebase/storage";
 import { storage } from "@/firebaseConfig";
 
 export function cn(...inputs: ClassValue[]) {
@@ -62,7 +62,7 @@ export async function uploadFile(file: File): Promise<string> {
     uploadTask.on(
       "state_changed",
       () => {},
-      (error) => {
+      (error: StorageError) => {
         console.error("Error uploading file:", error);
         reject(error);
       },

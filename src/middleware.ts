@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
   const protectedRoutes = ['/requester-dashboard', '/profile', '/request-help'];
   const protectedRoutesIfLoggedIn = ['/signin', '/signup'];
   // Check if the route is protected
-  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+  if (protectedRoutes.some((route: string) => pathname.startsWith(route))) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     // If there's no token, redirect to login
@@ -21,7 +21,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Check if the route is protected if user is logged in
-  if (protectedRoutesIfLoggedIn.some((route) => pathname.startsWith(route))) {
+  if (protectedRoutesIfLoggedIn.some((route: string) => pathname.startsWith(route))) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     // If there's no token, redirect to login

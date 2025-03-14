@@ -318,8 +318,8 @@ const SignUp = () => {
                                                 <Checkbox
                                                     id="email-notifications"
                                                     checked={formData.notifications.email}
-                                                    onCheckedChange={(checked) =>
-                                                        handleNotificationChange("email", checked as boolean)
+                                                    onCheckedChange={(checked: boolean) =>
+                                                        handleNotificationChange("email", checked)
                                                     }
                                                 />
                                                 <Label htmlFor="email-notifications" className="font-normal">
@@ -330,8 +330,8 @@ const SignUp = () => {
                                                 <Checkbox
                                                     id="sms-notifications"
                                                     checked={formData.notifications.sms}
-                                                    onCheckedChange={(checked) =>
-                                                        handleNotificationChange("sms", checked as boolean)
+                                                    onCheckedChange={(checked: boolean) =>
+                                                        handleNotificationChange("sms", checked)
                                                     }
                                                 />
                                                 <Label htmlFor="sms-notifications" className="font-normal">

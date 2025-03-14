@@ -83,7 +83,7 @@ const RequesterDashboard = () => {
         });
 
         if (response.status === 200) {
-            const updatedRequests = requests.map((request) => request._id === id ? { ...request, status: 'cancelled' } : request);
+            const updatedRequests = requests.map((request: HelpRequest) => request._id === id ? { ...request, status: 'cancelled' } : request);
             setRequests(updatedRequests);
             toast({
                 title: "Request cancelled!",
@@ -185,7 +185,7 @@ const RequesterDashboard = () => {
                                                     </Link>
                                                 </div>
                                             ) : (
-                                                activeRequests.map((request) => (
+                                                activeRequests.map((request: HelpRequest) => (
                                                     <Card key={request._id} className="overflow-hidden">
                                                         <CardHeader className="p-4 pb-2 cursor-pointer" onClick={() => toggleRequestDetails(request._id)}>
                                                             <div className="flex justify-between items-start">
@@ -259,7 +259,7 @@ const RequesterDashboard = () => {
                                                     <p>You have no past help requests.</p>
                                                 </div>
                                             ) : (
-                                                pastRequests.map((request) => (
+                                                pastRequests.map((request: HelpRequest) => (
                                                     <Card key={request._id} className="overflow-hidden opacity-75">
                                                         <CardHeader className="p-4 pb-2 cursor-pointer" onClick={() => toggleRequestDetails(request._id)}>
                                                             <div className="flex justify-between items-start">

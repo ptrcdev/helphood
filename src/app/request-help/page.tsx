@@ -38,7 +38,7 @@ const RequestHelp = () => {
         console.log(navigator.geolocation);
 
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          (position: GeolocationPosition) => {
             setFormData({
               ...formData,
               location: {
@@ -47,7 +47,7 @@ const RequestHelp = () => {
               },
             });
           },
-          (error) => {
+          (error: GeolocationPositionError) => {
             console.error("Error getting location", error);
             setFormData({
               ...formData,

@@ -59,13 +59,13 @@ const VolunteerDashboard = () => {
     useEffect(() => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                (position: GeolocationPosition) => {
                     setUserLocation({
                         lat: position.coords.latitude,
                         lon: position.coords.longitude,
                     });
                 },
-                (error) => {
+                (error: GeolocationPositionError) => {
                     console.error("Error getting location", error);
                     setUserLocation(null);
                 }
@@ -164,7 +164,7 @@ const VolunteerDashboard = () => {
         });
 
         if (response.status === 200) {
-            const updatedRequests = requests.map((request) => request._id === id ? { ...request, status: 'accepted' } : request);
+            const updatedRequests = requests.map((request: HelpRequest) => request._id === id ? { ...request, status: 'accepted' } : request);
             setRequests(updatedRequests);
             toast({
                 title: "Request accepted!",
@@ -182,8 +182,8 @@ const VolunteerDashboard = () => {
 
     // Calculate unique people helped
     const uniqueUserIds = new Set(requests
-        .filter((request) => request.status === "completed")
-        .map((request) => request.author)); // Assuming 'author' holds the userId of the person who helped
+        .filter((request: HelpRequest) => request.status === "completed")
+        .map((request: HelpRequest) => request.author)); // Assuming 'author' holds the userId of the person who helped
 
     const peopleHelped = uniqueUserIds.size; // Count of unique user IDs
 
@@ -248,7 +248,7 @@ const VolunteerDashboard = () => {
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        {requests.slice(0, 5).map((request, index) => {
+                                        {requests.slice(0, 5).map((request: HelpRequest, index: number) => {
                                             // Calculate distance if user's location is available and request has a location (GeoJSON)
                                             let distanceDisplay = 'Unknown'; // fallback
                                             if (userLocation && request.location && request.location.coordinates) {

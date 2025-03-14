@@ -36,12 +36,12 @@ const SignIn = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
+        setFormData((prev: { email: string, password: string }) => ({
             ...prev,
             [name]: value,
         }));
         if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: "" }));
+            setErrors((prev: Record<string, string>) => ({ ...prev, [name]: "" }));
         }
     };
 
