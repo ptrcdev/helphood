@@ -243,7 +243,7 @@ const RequestHelp = () => {
                     <Label htmlFor="urgency">How urgent is your request?</Label>
                     <Select
                       value={formData.urgency}
-                      onValueChange={(value) => handleSelectChange("urgency", value)}
+                      onValueChange={(value: string) => handleSelectChange("urgency", value)}
                     >
                       <SelectTrigger id="urgency">
                         <SelectValue placeholder="Select urgency" />
