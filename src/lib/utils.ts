@@ -2,6 +2,8 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { ref, uploadBytesResumable, getDownloadURL, StorageError } from "firebase/storage";
 import { storage } from "@/firebaseConfig";
+import { Volunteer } from "@/app/entitites/volunteer";
+import { User } from "@/app/entitites/user";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -72,4 +74,47 @@ export async function uploadFile(file: File): Promise<string> {
       }
     );
   });
+}
+
+// function to get User from Volunteer user_id
+export async function getUserFromVolunteer(userId: string): Promise<User | null> {
+  const response = await fetch(`/api/volunteers/${userId}`);
+  const data = await response.json();
+  return data;
+}
+
+// function to get all volunteers from db
+export async function getVolunteers(): Promise<Volunteer[]> {
+  const response = await fetch("/api/volunteers/active");
+  const data = await response.json();
+  console.log(data);
+  return data.volunteers;
+}
+
+export async function getClosestVolunteer(
+  userLocation: { lat: number; lon: number },
+): Promise<User | null> {
+
+  const volunteers = await getVolunteers();
+  if (volunteers.length === 0) return null;
+
+  let closestVolunteer: User | null = null;
+  let minDistance = Infinity;
+
+  for (const volunteer of volunteers) {
+    const [volLat, volLon] = volunteer.location.coordinates;
+    const distance = getDistanceFromLatLonInKm(
+      userLocation.lat,
+      userLocation.lon,
+      volLat,
+      volLon
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestVolunteer = await getUserFromVolunteer(volunteer.userId);
+    }
+  }
+
+  console.log(closestVolunteer);
+  return closestVolunteer;
 }

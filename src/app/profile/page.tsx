@@ -463,7 +463,7 @@ const UserProfile = () => {
                                         </p>
                                     </div>
 
-                                    <Button className="bg-gray-700 text-white hover:bg-gray-800 cursor-pointer">Save Preferences</Button>
+                                    <Button className="bg-gray-700 text-white hover:bg-gray-800 cursor-pointer" onClick={handleSubmit}>Save Preferences</Button>
                                 </CardContent>
                             </Card>
                         </TabsContent>

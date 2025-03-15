@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Heart, ArrowLeft, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useProfile } from "../context/ProfileContext";
+import { getClosestVolunteer } from "@/lib/utils";
 
 const RequestHelp = () => {
   const [formData, setFormData] = useState({
@@ -24,12 +25,12 @@ const RequestHelp = () => {
     description: "",
     urgency: "normal",
     location: {
-      type: 'Point', 
+      type: 'Point',
       coordinates: []
     } as {
-      type: 'Point', 
+      type: 'Point',
       coordinates: number[]
-    }, 
+    },
   });
 
   useEffect(() => {
@@ -42,7 +43,7 @@ const RequestHelp = () => {
             setFormData({
               ...formData,
               location: {
-                type: 'Point', 
+                type: 'Point',
                 coordinates: [position.coords.latitude, position.coords.longitude]
               },
             });
@@ -52,7 +53,7 @@ const RequestHelp = () => {
             setFormData({
               ...formData,
               location: {
-                type: 'Point', 
+                type: 'Point',
                 coordinates: []
               },
             });
@@ -62,7 +63,7 @@ const RequestHelp = () => {
         setFormData({
           ...formData,
           location: {
-            type: 'Point', 
+            type: 'Point',
             coordinates: []
           },
         });
@@ -76,7 +77,7 @@ const RequestHelp = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { profile } = useProfile();
-  
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -86,7 +87,7 @@ const RequestHelp = () => {
       ...formData,
       [name]: value,
     });
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors({
@@ -105,33 +106,33 @@ const RequestHelp = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
     }
-    
+
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     } else if (formData.description.length < 10) {
       newErrors.description = "Please provide more details";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       setIsSubmitting(true);
-      
+
       const response = await fetch("/api/requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({...formData, userId: profile?.userId}),
+        body: JSON.stringify({ ...formData, userId: profile?.userId }),
       });
 
       if (response.status !== 201) {
@@ -146,20 +147,45 @@ const RequestHelp = () => {
         return;
       }
 
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Help request submitted:", formData);
-        
-        // Show success message
-        toast({
-          title: "Request submitted!",
-          variant: 'default',
-          description: "Volunteers in your area have been notified.",
+      const closestVolunteer = await getClosestVolunteer(
+        { lat: formData.location.coordinates[0], lon: formData.location.coordinates[1] }
+      );
+
+      console.log(closestVolunteer);
+      if (closestVolunteer) {
+        // send email
+        const emailResponse = await fetch("/api/notify/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: closestVolunteer.email,
+            subject: "HelpHood Request",
+            text: `A new request has been submitted by ${profile?.name}.`,
+          }),
         });
-        
-        setIsSubmitting(false);
-        setSubmitted(true);
-      }, 1500);
+
+        if (emailResponse.status !== 200) {
+          toast({
+            title: "Error sending email",
+            variant: 'destructive',
+            description: "Please try again",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      toast({
+        title: "Request submitted!",
+        variant: 'default',
+        description: "Volunteers in your area have been notified.",
+      });
+
+      setIsSubmitting(false);
+      setSubmitted(true);
+
     }
   };
 
