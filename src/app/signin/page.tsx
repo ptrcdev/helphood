@@ -75,11 +75,13 @@ const SignIn = () => {
             // Show error message if sign in failed.
             toast({
                 title: "Sign In Failed",
+                variant: 'destructive',
                 description: result.error,
             });
         } else {
             toast({
                 title: "Signed in successfully!",
+                variant: 'default',
                 description: "Welcome back to HelpHood!",
             });
             // Redirect to the dashboard or homepage after a successful sign in.

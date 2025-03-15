@@ -138,6 +138,7 @@ const RequestHelp = () => {
         toast(
           {
             title: "Error submitting request",
+            variant: 'destructive',
             description: "Please try again",
           }
         );
@@ -152,6 +153,7 @@ const RequestHelp = () => {
         // Show success message
         toast({
           title: "Request submitted!",
+          variant: 'default',
           description: "Volunteers in your area have been notified.",
         });
         

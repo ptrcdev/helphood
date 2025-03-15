@@ -128,6 +128,7 @@ const VolunteerDashboard = () => {
                 toast(
                     {
                         title: "Error toggling availability",
+                        variant: 'destructive',
                         description: "Please try again",
                     }
                 );
@@ -168,11 +169,13 @@ const VolunteerDashboard = () => {
             setRequests(updatedRequests);
             toast({
                 title: "Request accepted!",
+                variant: 'default',
                 description: "The requester has been notified that you'll help them.",
             });
         } else {
             toast({
                 title: "Failed to accept request",
+                variant: 'destructive',
                 description: "Please try again.",
             });
         }

@@ -87,11 +87,13 @@ const RequesterDashboard = () => {
             setRequests(updatedRequests);
             toast({
                 title: "Request cancelled!",
+                variant: 'default',
                 description: "The requester has been notified that you've cancelled the request.",
             });
         } else {
             toast({
                 title: "Failed to cancel request",
+                variant: 'destructive',
                 description: "Please try again.",
             });
         }

@@ -159,6 +159,7 @@ const SignUp = () => {
                 // Show success message
                 toast({
                     title: "Account created!",
+                    variant: 'default',
                     description: "Welcome to HelpHood! You are now signed up.",
                 });
             } catch (err: any) {

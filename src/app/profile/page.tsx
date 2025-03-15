@@ -112,6 +112,7 @@ const UserProfile = () => {
         setTimeout(() => {
             toast({
                 title: "Profile updated",
+                variant: 'default',
                 description: "Your profile information has been saved.",
             });
         }, 500);
@@ -121,6 +122,7 @@ const UserProfile = () => {
         signOut();
         toast({
             title: "Signed out",
+            variant: 'default',
             description: "You have been signed out successfully.",
         });
     };
