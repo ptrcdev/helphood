@@ -18,9 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Heart, User, ArrowLeft, LogOut } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { signOut } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useProfile } from "../context/ProfileContext";
 import ImageUploader from "@/components/ImageUploader";
+import { uploadFile } from "@/lib/utils";
 
 const UserProfile = () => {
     const { profile } = useProfile();
@@ -105,17 +106,37 @@ const UserProfile = () => {
         });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Simulate API call
-        setTimeout(() => {
-            toast({
-                title: "Profile updated",
-                variant: 'default',
-                description: "Your profile information has been saved.",
+        try {
+            const response = await fetch(`/api/users/${profile?.userId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(userData),
             });
-        }, 500);
+            if (response.ok) {
+                toast({
+                    title: "Profile updated",
+                    variant: 'default',
+                    description: "Your profile information has been saved.",
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    variant: "destructive",
+                    description: "Failed to update profile.",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                variant: "destructive",
+                description: "Failed to update profile.",
+            });
+        }
     };
 
     const handleSignOut = () => {
@@ -127,10 +148,45 @@ const UserProfile = () => {
         });
     };
 
-    const handleImageChange = (file: File | null, previewUrl: string | null) => {
-        setSelectedFile(file);
-        setPreviewUrl(previewUrl); // create preview url for image
+    const handleImageChange = async (file: File | null, previewUrl: string | null) => {
+        setPreviewUrl(previewUrl);
+        let imageUrl = userData.image;
+        // If a file was selected, upload it now
+        if (file) {
+            imageUrl = await uploadFile(file); // This returns the Firebase download URL
+            // Update formData with the actual download URL
+            setUserData({ ...userData, image: imageUrl });
+        }
+
     };
+
+    const handleDeleteAccount = async () => {
+        try {
+            const response = await fetch(`/api/users/${profile?.userId}`, {
+                method: "DELETE",
+            });
+            if (response.ok) {
+                toast({
+                    title: "Account deleted",
+                    variant: 'default',
+                    description: "Your account has been deleted successfully.",
+                });
+                signOut();
+            } else {
+                toast({
+                    title: "Error",
+                    variant: "destructive",
+                    description: "Failed to delete account.",
+                });
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                variant: "destructive",
+                description: "Failed to delete account.",
+            });
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -337,7 +393,7 @@ const UserProfile = () => {
                                         <p className="text-sm text-gray-500">
                                             Once you delete your account, there is no going back. Please be certain.
                                         </p>
-                                        <Button variant="destructive" className="bg-rose-500 text-white font-bold hover:bg-red-300 cursor-pointer">Delete Account</Button>
+                                        <Button variant="destructive" className="bg-rose-500 text-white font-bold hover:bg-red-300 cursor-pointer" onClick={handleDeleteAccount}>Delete Account</Button>
                                     </div>
                                 </CardContent>
                             </Card>
