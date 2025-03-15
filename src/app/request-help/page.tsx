@@ -151,7 +151,6 @@ const RequestHelp = () => {
         { lat: formData.location.coordinates[0], lon: formData.location.coordinates[1] }
       );
 
-      console.log(closestVolunteer);
       if (closestVolunteer) {
         // send email
         const emailResponse = await fetch("/api/notify/email", {

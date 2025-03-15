@@ -21,9 +21,9 @@ export function getDistanceFromLatLonInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(deg2rad(lat1)) *
-      Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distInKm = R * c;
   return parseFloat(distInKm.toFixed(2));
@@ -55,15 +55,15 @@ export function getPostedTimeAgo(time: Date) {
 export async function uploadFile(file: File): Promise<string> {
   // Create a unique reference for this file
   const storageRef = ref(storage, `profile-images/${Date.now()}-${file.name}`);
-  
+
   // Start the file upload
   const uploadTask = uploadBytesResumable(storageRef, file);
-  
+
   // Return a promise that resolves with the download URL when the upload completes
   return new Promise((resolve, reject) => {
     uploadTask.on(
       "state_changed",
-      () => {},
+      () => { },
       (error: StorageError) => {
         console.error("Error uploading file:", error);
         reject(error);
@@ -78,9 +78,9 @@ export async function uploadFile(file: File): Promise<string> {
 
 // function to get User from Volunteer user_id
 export async function getUserFromVolunteer(userId: string): Promise<User | null> {
-  const response = await fetch(`/api/volunteers/${userId}`);
+  const response = await fetch(`/api/users/${userId}`);
   const data = await response.json();
-  return data;
+  return data.user;
 }
 
 // function to get all volunteers from db
@@ -94,7 +94,12 @@ export async function getVolunteers(): Promise<Volunteer[]> {
 export async function getClosestVolunteer(
   userLocation: { lat: number; lon: number },
 ): Promise<User | null> {
-
+  // Default to Lisbon coordinates if no location is provided TODO: remove when in prod
+  let aux = userLocation;
+  if (!userLocation.lat || !userLocation.lon) {
+    aux.lat = 37.7749;
+    aux.lon = -9.4194;
+  }
   const volunteers = await getVolunteers();
   if (volunteers.length === 0) return null;
 
@@ -104,17 +109,17 @@ export async function getClosestVolunteer(
   for (const volunteer of volunteers) {
     const [volLat, volLon] = volunteer.location.coordinates;
     const distance = getDistanceFromLatLonInKm(
-      userLocation.lat,
-      userLocation.lon,
+      aux.lat,
+      aux.lon,
       volLat,
       volLon
     );
+
     if (distance < minDistance) {
       minDistance = distance;
       closestVolunteer = await getUserFromVolunteer(volunteer.userId);
     }
   }
 
-  console.log(closestVolunteer);
   return closestVolunteer;
 }
