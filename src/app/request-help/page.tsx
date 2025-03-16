@@ -152,27 +152,51 @@ const RequestHelp = () => {
       );
 
       if (closestVolunteer) {
-        // send email
-        const emailResponse = await fetch("/api/notify/email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            to: closestVolunteer.email,
-            subject: "HelpHood Request",
-            text: `A new request has been submitted by ${profile?.name}.`,
-          }),
-        });
-
-        if (emailResponse.status !== 200) {
-          toast({
-            title: "Error sending email",
-            variant: 'destructive',
-            description: "Please try again",
+        if (closestVolunteer.notifications.email) {
+          const emailResponse = await fetch("/api/notify/email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: closestVolunteer.email,
+              subject: "HelpHood Request",
+              text: `A new request has been submitted by ${profile?.name}.`,
+            }),
           });
-          setIsSubmitting(false);
-          return;
+
+          if (emailResponse.status !== 200) {
+            toast({
+              title: "Error sending email",
+              variant: 'destructive',
+              description: "Please try again",
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        if (closestVolunteer.notifications.sms) {
+          const smsResponse = await fetch("/api/notify/sms", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: closestVolunteer.phone,
+              message: `A new request has been submitted by ${profile?.name}.`,
+            }),
+          });
+
+          if (smsResponse.status !== 200) {
+            toast({
+              title: "Error sending SMS",
+              variant: 'destructive',
+              description: "Please try again",
+            });
+            setIsSubmitting(false);
+            return;
+          }
         }
       }
 

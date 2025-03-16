@@ -93,7 +93,7 @@ export async function getVolunteers(): Promise<Volunteer[]> {
 
 export async function getClosestVolunteer(
   userLocation: { lat: number; lon: number },
-): Promise<User | null> {
+): Promise<Record<string, any> | null> {
   // Default to Lisbon coordinates if no location is provided TODO: remove when in prod
   let aux = userLocation;
   if (!userLocation.lat || !userLocation.lon) {
@@ -103,7 +103,7 @@ export async function getClosestVolunteer(
   const volunteers = await getVolunteers();
   if (volunteers.length === 0) return null;
 
-  let closestVolunteer: User | null = null;
+  let closestVolunteer: Record<string, any> | null = null;
   let minDistance = Infinity;
 
   for (const volunteer of volunteers) {
@@ -117,7 +117,8 @@ export async function getClosestVolunteer(
 
     if (distance < minDistance) {
       minDistance = distance;
-      closestVolunteer = await getUserFromVolunteer(volunteer.userId);
+      const closestVolunteerUser = await getUserFromVolunteer(volunteer.userId);
+      closestVolunteer = {...closestVolunteerUser, closestVolunteerUser};
     }
   }
 
