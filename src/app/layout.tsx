@@ -5,7 +5,7 @@ import ClientQueryProvider from "@/components/ClientQueryProvider";
 import { Toaster } from "@/components/ui/Toaster";
 import { Toaster as Sonner } from "@/components/ui/Sonner";
 import './globals.css';
-
+import { Analytics } from "@vercel/analytics/react";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { ProfileProvider } from "./context/ProfileContext";
 
@@ -33,6 +33,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientQueryProvider>
+          <Analytics />
           <Toaster />
           <Sonner />
           <SessionProviderWrapper>
